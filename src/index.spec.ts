@@ -1,4 +1,4 @@
-import { AlexaDateConverter, AmazonDotDateCategory, AmazonDotDateSeason, StartOfSeasonDictionary } from "./index";
+import { AlexaDateConverter, AmazonDotDateCategory, AmazonDotDateSeason, StartOfSeasonDictionary, southernMeteorologicalSeasonStarts } from "./index";
 import { DayOfWeek, MonthDay, Month } from "js-joda";
 
 describe('AlexaDateConverter', () => {
@@ -219,6 +219,24 @@ describe('AlexaDateConverter', () => {
 
             // Assert
             expect(result.toString()).toEqual("2009-01-10");
+        })
+
+        it("should find the day that is the meteorological first day of summer for that year (with southern hemisphere season dictionary)", ()=> {
+            // Arrange
+            const dateTypeToTest: AmazonDotDateCategory = "season";
+            const theLib = new AlexaDateConverter({
+                startOfSeasonDictionary: southernMeteorologicalSeasonStarts
+            });
+            const seasonToUse: AmazonDotDateSeason = "SU";
+            const input = `2009-${seasonToUse}`;
+            // red-herring check
+            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
+
+            // Act
+            const result = theLib.convertToDay(input);
+
+            // Assert
+            expect(result.toString()).toEqual("2009-02-01");
         })
 
         it("should not handle a season string if the 2 char season is not correct and for some strange reason Alexa chose to send in bad data", ()=> {
