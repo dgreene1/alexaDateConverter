@@ -29,7 +29,7 @@
     "coveralls": "^3.0.4",
     "husky": "^1.2.1",
     "jest": "^24.9.0",
-    "js-joda": "^1.11.0",
+    "js-joda": "^1.9",
     "ts-jest": "^24.1.0",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.17.0",
@@ -37,7 +37,7 @@
     "typescript-tslint-plugin": "^0.2.0"
   },
   "peerDependencies": {
-    "js-joda": "^1.2"
+    "js-joda": "^1.9"
   },
   "dependencies": {}
 }
