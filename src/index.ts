@@ -137,13 +137,6 @@ export class AlexaDateConverter {
     }
 
     private convertIsoWeekToLocalDate(amazonDateStr: string): LocalDate {
-        // Guard
-        const category = this.classifyAmazonDotDate(amazonDateStr);
-
-        if(category !== "specific week"){
-            throw new Error(`The string was not actually an ISO week string since it didn't exclusively match the YYYY-WXX pattern`)
-        }
-
         // for example, the first week of 2019 would be expressed as "2009-W01". Read more here: https://en.wikipedia.org/wiki/ISO_week_date
         const [yearStr, weekStr, ...accidentalExtras] = amazonDateStr.split("-");
         if(accidentalExtras.length){
@@ -170,13 +163,6 @@ export class AlexaDateConverter {
     }
 
     private convertIsoWeekendToLocalDate(amazonDateStr: string): LocalDate {
-        // Guard
-        const category = this.classifyAmazonDotDate(amazonDateStr);
-
-        if(category !== "weekend for a specific week"){
-            throw new Error(`The string was not actually a weekend string since it didn't exclusively match the YYYY-WXX-WE pattern`)
-        }
-
         // for example: "2015-W49-WE";
         const [yearStr, weekStr, weekendSignifier] = amazonDateStr.split("-");
         if(weekendSignifier !== "WE"){
@@ -203,13 +189,6 @@ export class AlexaDateConverter {
     }
 
     private convertSeasonStrToLocalDate(amazonDateStr: string): LocalDate {
-        // Guard
-        const category = this.classifyAmazonDotDate(amazonDateStr);
-
-        if(category !== "season"){
-            throw new Error(`The string was not actually a weekend string since it didn't exclusively match the YYYY-SS pattern`)
-        }
-
         // Convert
         // For example, an utterance of "next winter" would be sent to us as "2017-WI" from Alexa
         const [ yearStr, seasonStr, ...accidentalExtras ] = amazonDateStr.split("-");
