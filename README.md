@@ -1,4 +1,4 @@
-
+[![Coverage Status](https://coveralls.io/repos/github/dgreene1/alexaDateConverter/badge.svg?branch=master)](https://coveralls.io/github/dgreene1/alexaDateConverter?branch=master)
 
 # alexa-date-converter
 A library to help convert [AMAZON.DATE (reference)](https://developer.amazon.com/docs/custom-skills/slot-type-reference.html#date) strings to useful objects.
