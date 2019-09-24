@@ -10,12 +10,18 @@ This library can convert the following date strings. Note: `output` in the examp
 | Type Of Date String  | Example Input From Alexa | Example Object After Conversion |
 | ------------- | ------------- | ------------- |
 | "specific day"  | "2019-12-25"  | `output.toString(); // "2019-12-25"`  |
-| "specific week"  | "2009-W01"  | `output.toString(); // "2009-01-05"`  |
+| "specific week"  | "2009-W01"  | `output.toString(); // "2008-12-29"` (see note below) |
 | "weekend for a specific week"  | "2009-W01-WE"  | `output.toString(); // "2009-01-10"`  |
 | "month of year"  | "2019-12"  | `output.toString(); // "2019-12-01"`  |
 | "year"  | "2019"  | `output.toString(); // "2019-01-01"`  |
 | "decade"  | "200X"  | `output.toString(); // "2000-01-01"`  |
 | "season"  | "2009-SU"  | `output.toString(); // "2009-06-01"`  |
+
+**Note on "specific week":** Since Alexa provides ISO week format, the result can be strange (at first glance) since the day appears outside of the Gregorian calendar year. However, this can be clarified by looking at the math behind the [ISO Calendar](https://www.staff.science.uu.nl/~gent0113/calendar/isocalendar_text_2.htm):
+
+> the "first week of the ISO calendar year is the earliest week that contains at least four days of the month of January"
+
+You can read more about ISO calendar here: [https://www.staff.science.uu.nl/~gent0113/calendar/isocalendar_text_2.htm](https://www.staff.science.uu.nl/~gent0113/calendar/isocalendar_text_2.htm)
 
 # Examples
 

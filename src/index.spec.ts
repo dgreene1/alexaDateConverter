@@ -1,5 +1,18 @@
 import { AlexaDateConverter, AmazonDotDateCategory, AmazonDotDateSeason, StartOfSeasonDictionary, southernMeteorologicalSeasonStarts } from "./index";
-import { DayOfWeek, MonthDay, Month } from "js-joda";
+import { MonthDay, Month, LocalDate } from "js-joda";
+
+/**
+ * the dates for these expectations were selected from https://www.epochconverter.com/weeks/ but are in-line with the ISO week calendar (which sometimes has dates that appear outside of the calendar year)
+ */
+const testCasesForWeek = {
+    "2008": { year: 2008, weeksInYear: 52, firstMondayOfYear: "2007-12-31", lastMondayOfYear: "2008-12-22" },
+    "2009": { year: 2009, weeksInYear: 53, firstMondayOfYear: "2008-12-29", lastMondayOfYear: "2009-12-28" },
+    "2018": { year: 2018, weeksInYear: 52, firstMondayOfYear: "2018-01-01", lastMondayOfYear: "2018-12-24", },
+    "2019": { year: 2019, weeksInYear: 52, firstMondayOfYear: "2018-12-31", lastMondayOfYear: "2019-12-23"},
+    "2014": { year: 2014, weeksInYear: 52, firstMondayOfYear: "2013-12-30", lastMondayOfYear: "2014-12-22" },
+    "2024": { year: 2024, weeksInYear: 52, firstMondayOfYear: "2024-01-01", lastMondayOfYear: "2024-12-23" },
+}
+const caseNamesForWeeks = Object.keys(testCasesForWeek);
 
 describe('AlexaDateConverter', () => {
 
@@ -40,38 +53,42 @@ describe('AlexaDateConverter', () => {
 
     describe('when the input is of category "specific week"', ()=> {
 
-        it("should handle an ISO week (with default startOfWeek being Monday)", ()=> {
-            // Arrange
-            const dateTypeToTest: AmazonDotDateCategory = "specific week";
-            const theLib = new AlexaDateConverter();
-            const input = "2009-W01"
-            // red-herring check
-            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
+        describe.each(caseNamesForWeeks)(`for case %s`, (caseName) => {
+            const caseDetails = testCasesForWeek[caseName as keyof typeof testCasesForWeek];
 
-            // Act
-            const result = theLib.convertToDay(input);
+            const firstWeekStr = `${caseDetails.year}-W01`;
+            const lastWeekStr = `${caseDetails.year}-W${caseDetails.weeksInYear}`;
 
-            // Assert
-            expect(result.toString()).toEqual("2009-01-05");
-        })
+            it(`should have the expected first Monday of the year for the first week`, ()=>{
+                // Arrange
+                const dateTypeToTest: AmazonDotDateCategory = "specific week";
+                const theLib = new AlexaDateConverter();
+                const input = firstWeekStr;
+                // red-herring check
+                expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-        it("should handle an ISO week (with an overridden startOfWeek set to Tuesday)", ()=> {
-            // Arrange
-            const dateTypeToTest: AmazonDotDateCategory = "specific week";
-            const theLib = new AlexaDateConverter({
-                startOfWeek: DayOfWeek.TUESDAY
+                // Act
+                const result = theLib.convertToDay(input);
+
+                // Assert
+                expect(result.toString()).toEqual(caseDetails.firstMondayOfYear);
             });
-            const input = "2009-W01"
-            // red-herring check
-            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-            // Act
-            const result = theLib.convertToDay(input);
+            it(`should have the expected last Monday of the year for the last week`, ()=>{
+                // Arrange
+                const dateTypeToTest: AmazonDotDateCategory = "specific week";
+                const theLib = new AlexaDateConverter();
+                const input = lastWeekStr;
+                // red-herring check
+                expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-            // Assert
-            expect(result.toString()).toEqual("2009-01-06");
+                // Act
+                const result = theLib.convertToDay(input);
+
+                // Assert
+                expect(result.toString()).toEqual(caseDetails.lastMondayOfYear);
+            });
         })
-
 
         it("should not handle ISO week if for some strange reason Alexa chose to represent a week illegally as 2008-W00 since weeks start on 1", ()=> {
             // Arrange
@@ -93,39 +110,46 @@ describe('AlexaDateConverter', () => {
 
     describe('when the input is of category "weekend for a specific week"', ()=> {
 
-        it("should handle an ISO weekend (with default startOfWeek being Monday (and being ignored since we're considering the weekend))", ()=> {
-            // Arrange
-            const dateTypeToTest: AmazonDotDateCategory = "weekend for a specific week";
-            const theLib = new AlexaDateConverter();
-            const input = "2009-W01-WE"
-            // red-herring check
-            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
+        describe.each(caseNamesForWeeks)(`for case %s`, (caseName) => {
+            const caseDetails = testCasesForWeek[caseName as keyof typeof testCasesForWeek];
 
-            // Act
-            const result = theLib.convertToDay(input);
+            const firstWeekStr = `${caseDetails.year}-W01-WE`;
+            const lastWeekStr = `${caseDetails.year}-W${caseDetails.weeksInYear}-WE`;
 
-            // Assert
-            expect(result.toString()).toEqual("2009-01-10");
-        })
+            it(`should have the expected first Monday of the year for the first week`, ()=>{
+                // Arrange
+                const dateTypeToTest: AmazonDotDateCategory = "weekend for a specific week";
+                const theLib = new AlexaDateConverter();
+                const input = firstWeekStr;
+                // red-herring check
+                expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-        it("should handle an ISO weekend (with an overridden startOfWeek set to Tuesday (and being ignored since we're considering the weekend))", ()=> {
-            // Arrange
-            const dateTypeToTest: AmazonDotDateCategory = "weekend for a specific week";
-            const theLib = new AlexaDateConverter({
-                startOfWeek: DayOfWeek.TUESDAY
+                // Act
+                const result = theLib.convertToDay(input);
+
+                // Assert
+                const daysBetweenMondayAndSaturday = 5;
+                const expected = LocalDate.parse(caseDetails.firstMondayOfYear).plusDays(daysBetweenMondayAndSaturday).toString();
+                expect(result.toString()).toEqual(expected);
             });
-            const input = "2009-W01-WE"
-            // red-herring check
-            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-            // Act
-            const result = theLib.convertToDay(input);
+            it(`should have the expected last Monday of the year for the last week`, ()=>{
+                // Arrange
+                const dateTypeToTest: AmazonDotDateCategory = "weekend for a specific week";
+                const theLib = new AlexaDateConverter();
+                const input = lastWeekStr;
+                // red-herring check
+                expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
 
-            // Assert
-            expect(result.toString()).toEqual("2009-01-10");
+                // Act
+                const result = theLib.convertToDay(input);
+
+                // Assert
+                const daysBetweenMondayAndSaturday = 5;
+                const expected = LocalDate.parse(caseDetails.lastMondayOfYear).plusDays(daysBetweenMondayAndSaturday).toString();
+                expect(result.toString()).toEqual(expected);
+            });
         })
-
-
         it("should not handle ISO weekend if for some strange reason Alexa chose to represent a week illegally as 2008-W00 since weeks start on 1", ()=> {
             // Arrange
             const theLib = new AlexaDateConverter();
@@ -201,9 +225,13 @@ describe('AlexaDateConverter', () => {
             // Arrange
             const dateTypeToTest: AmazonDotDateCategory = "season";
             const strangelyShortSeasons: StartOfSeasonDictionary = {
+                // tslint:disable-next-line: no-magic-numbers
                 SP: MonthDay.of(Month.JANUARY, 5),
+                // tslint:disable-next-line: no-magic-numbers
                 SU: MonthDay.of(Month.JANUARY, 10),
+                // tslint:disable-next-line: no-magic-numbers
                 FA: MonthDay.of(Month.JANUARY, 15),
+                // tslint:disable-next-line: no-magic-numbers
                 WI: MonthDay.of(Month.JANUARY, 20),
             }
             const theLib = new AlexaDateConverter({

@@ -2,11 +2,17 @@
 	"extends": [
 		"tslint:recommended",
 		"tslint-config-prettier"
-	],
+    ],
 	"rules": {
         "await-promise": true,
         "adjacent-overload-signatures": true,
-        "curly": [true, "ignore-same-line"],
+        "curly": false,
+        "ban": [
+            true,
+            {"name": ["eval"], "message": "eval is a security risk."},
+            {"name": ["test","each"], "message": "This breaks vscode-jest. Use 'describe.each' with an 'it' inside the loop. See here: https://github.com/jest-community/vscode-jest/issues/427"},
+            {"name": ["it","each"], "message": "This breaks vscode-jest. Use 'describe.each' with an 'it' inside the loop. See here: https://github.com/jest-community/vscode-jest/issues/427"}
+        ],
         "interface-over-type-literal": false,
         "no-floating-promises": true,
         "no-unused-expression": false,
@@ -22,9 +28,13 @@
         "no-empty-interface": true,
         "no-internal-module": true,
         "no-magic-numbers": {
+            "options": [1, -1, 0, 100],
             "severity": "warning"
         },
         "no-empty": false,
+        "no-debugger": {
+            "severity": "warning"
+        },
         "no-namespace": false,
         "no-non-null-assertion": true,
         "no-reference": true,
@@ -53,10 +63,7 @@
     "linterOptions": {
         "exclude": [
             "node_modules/**",
-            "./**/*_spec.*",
-            "./**/*.spec.*",
-            "./**/*_test.*",
-            "./**/*.test.*"
+            "./**/*_spec*"
         ]
     }
 }

@@ -1,6 +1,5 @@
-import { LocalDate, Month, DayOfWeek, YearMonth, Year, MonthDay, ChronoUnit } from 'js-joda'
+import { LocalDate, Month, DayOfWeek, YearMonth, Year, MonthDay, IsoFields } from 'js-joda'
 import { assertUnreachable } from './helpers/neverCheckers';
-import { daysDelta } from './helpers/weekOfYearMath';
 
 export type AmazonDotDateSeason = "WI" | "SP" | "SU" | "FA";
 
@@ -37,10 +36,12 @@ export class AlexaDateConverter {
     private meteorologicalSeasonStarts: StartOfSeasonDictionary;
 
     public defaultStartOfWeek = DayOfWeek.MONDAY;
-    private startOfWeek: DayOfWeek;
 
     constructor(options?: {
         startOfSeasonDictionary?: StartOfSeasonDictionary,
+        /**
+         * DEPRECATED. Weeks in ISO-8601 always start on Monday
+         */
         startOfWeek?: DayOfWeek
     }){
         if(options && options.startOfSeasonDictionary){
@@ -50,9 +51,8 @@ export class AlexaDateConverter {
         }
 
         if(options && options.startOfWeek){
-            this.startOfWeek = options.startOfWeek
-        } else {
-            this.startOfWeek = this.defaultStartOfWeek;
+            // tslint:disable-next-line: no-console
+            console.warn(`options.startOfWeek is deprecated since ISO-8601 specifies that weeks start on Monday`);
         }
     }
 
@@ -112,8 +112,8 @@ export class AlexaDateConverter {
 
     private amazonDotDateMatchers : Record<AmazonDotDateCategory, (stringToTry: string)=> boolean> = {
         "specific day": (stringToTry) => this.isDayStr(stringToTry),
-        "specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-2])$/.test(stringToTry),
-        "weekend for a specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-2])-WE$/.test(stringToTry),
+        "specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-3])$/.test(stringToTry),
+        "weekend for a specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-3])-WE$/.test(stringToTry),
         "month of year": (stringToTry) => this.isMonthStr(stringToTry),
         "year": (stringToTry) => this.isYearStr(stringToTry),
         "decade": (stringToTry) => /^([0-9]{3})X$/.test(stringToTry),
@@ -136,7 +136,7 @@ export class AlexaDateConverter {
         }
     }
 
-    private convertIsoWeekToLocalDate(amazonDateStr: string): LocalDate {
+    protected convertIsoWeekToLocalDate(amazonDateStr: string): LocalDate {
         // for example, the first week of 2019 would be expressed as "2009-W01". Read more here: https://en.wikipedia.org/wiki/ISO_week_date
         const [yearStr, weekStr, ...accidentalExtras] = amazonDateStr.split("-");
         if(accidentalExtras.length){
@@ -149,46 +149,44 @@ export class AlexaDateConverter {
         }
         const weekNum = parseInt(weekStrCleaned);
         if(weekNum < 1){
-            throw new Error(`The week number for ISO weeks starts on 1, but we derived ${weekNum} for the week section of "${amazonDateStr}"`)
+            throw new Error(`Incorrect date string. The week number for ISO weeks starts on 1, but we derived ${weekNum} for the week section of "${amazonDateStr}"`)
         }
 
-        const startOfYear = LocalDate.of(yearNum, Month.JANUARY, 1);
+        const firstDayOfThatYear = LocalDate.MIN.with(IsoFields.WEEK_BASED_YEAR, yearNum);
+        const firstDayOfThatWeek = firstDayOfThatYear.with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, weekNum);
 
-        if(DayOfWeek.from(startOfYear) === this.startOfWeek){
-            return startOfYear.plusWeeks(weekNum);
-        } else {
-            const daysTillStartOfNextWeek = daysDelta(startOfYear, this.startOfWeek);
-            return startOfYear.plus(daysTillStartOfNextWeek, ChronoUnit.DAYS).plusWeeks(weekNum);
-        }
+        return firstDayOfThatWeek;
     }
 
-    private convertIsoWeekendToLocalDate(amazonDateStr: string): LocalDate {
+    protected convertIsoWeekendToLocalDate(amazonDateStr: string): LocalDate {
         // for example: "2015-W49-WE";
-        const [yearStr, weekStr, weekendSignifier] = amazonDateStr.split("-");
-        if(weekendSignifier !== "WE"){
+        const [yearStr, weekStr, weekendSignifier, ...accidentalExtras] = amazonDateStr.split("-");
+        if(weekendSignifier !== "WE" || accidentalExtras.length){
             throw new Error(`Something went wrong in classifyAmazonDotDate since ${amazonDateStr} did not exclusively match YYYY-WXX-WE pattern`);
         }
         const isoWeekString = `${yearStr}-${weekStr}`;
 
         const justTheWeek = this.convertIsoWeekToLocalDate(isoWeekString);
 
-        const daysTillStartOfNextWeekend = daysDelta(justTheWeek, DayOfWeek.SATURDAY);
-        return justTheWeek.plus(daysTillStartOfNextWeekend, ChronoUnit.DAYS);
+        // Since every ISO week starts on a Monday, we can simply add 5 days to get to the weekend
+        const daysBetweenMondayAndSaturday = 5;
+        const saturday = justTheWeek.plusDays(daysBetweenMondayAndSaturday);
+        return saturday;
     }
 
-    private convertYearStrToLocalDate(amazonDateStr: string): LocalDate {
+    protected convertYearStrToLocalDate(amazonDateStr: string): LocalDate {
         // Guard
         const category = this.classifyAmazonDotDate(amazonDateStr);
 
         if(category !== "year"){
-            throw new Error(`The string was not actually a weekend string since it didn't exclusively match the YYYY-WXX-WE pattern`)
+            throw new Error(`The string ${amazonDateStr} was not actually a year string since it didn't exclusively match the YYYY pattern`)
         }
 
         // Convert
         return Year.parse(amazonDateStr).atMonth(Month.JANUARY).atDay(1)
     }
 
-    private convertSeasonStrToLocalDate(amazonDateStr: string): LocalDate {
+    protected convertSeasonStrToLocalDate(amazonDateStr: string): LocalDate {
         // Convert
         // For example, an utterance of "next winter" would be sent to us as "2017-WI" from Alexa
         const [ yearStr, seasonStr, ...accidentalExtras ] = amazonDateStr.split("-");
