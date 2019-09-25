@@ -61,9 +61,7 @@ Since Alexa can translate an utterance of "next week" into "
 import { AlexaDateConverter } from 'alexa-date-converter';
 import { DayOfWeek } from "js-joda";
 
-const dateConverter = new AlexaDateConverter({
-    startOfWeek: DayOfWeek.TUESDAY // <-- optional. The library defaults the start of the week to Monday
-});
+const dateConverter = new AlexaDateConverter();
 const day = dateConverter.convertToDay("2009-W01");
 console.log(day); // 2009-01-06
 ```
