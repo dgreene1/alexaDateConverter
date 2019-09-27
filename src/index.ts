@@ -112,8 +112,8 @@ export class AlexaDateConverter {
 
     private amazonDotDateMatchers : Record<AmazonDotDateCategory, (stringToTry: string)=> boolean> = {
         "specific day": (stringToTry) => this.isDayStr(stringToTry),
-        "specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-3])$/.test(stringToTry),
-        "weekend for a specific week": (stringToTry) => /^([0-9]{4})-W([0-4][1-9]|5[0-3])-WE$/.test(stringToTry),
+        "specific week": (stringToTry) => /^([0-9]{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/.test(stringToTry),
+        "weekend for a specific week": (stringToTry) => /^([0-9]{4})-W(0[1-9]|[1-4][0-9]|5[0-3])-WE$/.test(stringToTry),
         "month of year": (stringToTry) => this.isMonthStr(stringToTry),
         "year": (stringToTry) => this.isYearStr(stringToTry),
         "decade": (stringToTry) => /^([0-9]{3})X$/.test(stringToTry),

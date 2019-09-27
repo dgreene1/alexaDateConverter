@@ -90,6 +90,21 @@ describe('AlexaDateConverter', () => {
             });
         })
 
+        it(`should work on weeks that are multiples of 10`, ()=>{
+            // Arrange
+            const dateTypeToTest: AmazonDotDateCategory = "specific week";
+            const theLib = new AlexaDateConverter();
+            const input = "2019-W40";
+            // red-herring check
+            expect(theLib.classifyAmazonDotDate(input)).toEqual(dateTypeToTest);
+
+            // Act
+            const result = theLib.convertToDay(input);
+
+            // Assert
+            expect(result.toString()).toEqual("2019-09-30");
+        });
+
         it("should not handle ISO week if for some strange reason Alexa chose to represent a week illegally as 2008-W00 since weeks start on 1", ()=> {
             // Arrange
             const theLib = new AlexaDateConverter();
