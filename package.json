@@ -1,6 +1,6 @@
 {
   "name": "alexa-date-converter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A library to help convert AMAZON dot DATE strings to useful objects",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
