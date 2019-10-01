@@ -1,6 +1,6 @@
 {
   "name": "alexa-date-converter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A library to help convert AMAZON dot DATE strings to useful objects",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
@@ -16,7 +16,8 @@
     "lint": "tslint \"**/*.ts\" --project .",
     "test": "jest --collectCoverage",
     "prepare-badges": "jest --coverage && cat ./coverage/lcov.info | coveralls",
-    "pre-commit": "npm run build && npm run test"
+    "pre-commit": "npm run build && npm run test",
+    "prepublish": "yarn run pre-commit"
   },
   "husky": {
     "hooks": {
