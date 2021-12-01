@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@types/clone-deep": "^4.0.1",
-    "@types/jest": "^26.0.3",
+    "@types/jest": "^27.0.3",
     "coveralls": "^3.0.4",
     "husky": "^5.1.2",
     "jest": "^25.1.0",
